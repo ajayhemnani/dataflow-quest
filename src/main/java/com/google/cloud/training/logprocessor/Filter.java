@@ -38,7 +38,7 @@ public class Grep {
 
 		String input = "src/main/java/com/google/cloud/training/samplelog.json";
 		String outputPrefix = "/tmp/output";
-		final String searchTerm = "ERROR";
+		final String searchTerm = "error";
 
 		p //
 				.apply("GetLogs", TextIO.read().from(input)) //
