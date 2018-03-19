@@ -14,7 +14,7 @@
  * the License.
  */
 
-package com.google.cloud.training.dataanalyst.javahelp;
+package com.google.cloud.training.logprocessor;
 
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
