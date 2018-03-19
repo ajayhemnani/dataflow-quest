@@ -29,14 +29,14 @@ import org.apache.beam.sdk.transforms.ParDo;
  * @author ajaych
  *
  */
-public class Grep {
+public class Filter {
 
 	@SuppressWarnings("serial")
 	public static void main(String[] args) {
 		PipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().create();
 		Pipeline p = Pipeline.create(options);
 
-		String input = "src/main/java/com/google/cloud/training/samplelog.json";
+		String input = "src/main/java/com/google/cloud/training/logprocessor/samplelog.json";
 		String outputPrefix = "/tmp/output";
 		final String searchTerm = "error";
 
