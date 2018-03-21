@@ -49,20 +49,15 @@ public class Messenger {
           public void processElement(ProcessContext c) {
           String entry = c.element();
           JsonParser parser = new JsonParser();
-          JsonElement element = parser.parse(entry.replaceAll("\\s+",""));
+          JsonElement element = parser.parse(entry);
             if (element.isJsonNull()) {
               return;
             }
             JsonObject root = element.getAsJsonObject();
-            JsonArray lines = root.get("protoPayload").getAsJsonObject().get("authorizationInfo").getAsJsonArray();
-            for (int i = 0; i < lines.size(); i++) {
-              JsonObject line = lines.get(i).getAsJsonObject();
-              String logMessage = line.get("resource").getAsString();
-              // Do what you need with the logMessage here
+            String logMessage = root.get("protoPayload").getAsJsonObject().get("receiveTimestamp").getAsString();
               c.output(logMessage);
-             }
           }
-                                })) //
+         })) //
                                 .apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
                 p.run();
         }
