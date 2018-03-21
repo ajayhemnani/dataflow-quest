@@ -15,17 +15,18 @@
  */
 
 package com.google.cloud.training.logprocessor;
-
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptions;
 import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
-import com.google.gson.internal.Streams;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
 import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.MalformedJsonException;
+import com.google.gson.JsonObject;
 
 /**
  * A dataflow pipeline that prints the lines that match a specific search term
@@ -34,41 +35,35 @@ import com.google.gson.stream.MalformedJsonException;
  *
  */
 public class Messenger {
-
-	@SuppressWarnings("serial")
-	public static void main(String[] args) {
-		PipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().create();
-		Pipeline p = Pipeline.create(options);
-
-		String input = "src/main/java/com/google/cloud/training/logprocessor/samplelog.json";
-		String outputPrefix = "/tmp/output";
-		final String searchTerm = "error";
-
-		p //
-				.apply("GetLogs", TextIO.read().from(input)) //
-				.apply("Extract", ParDo.of(new DoFn<String, String>() {
-				 @ProcessElement
+        @SuppressWarnings("serial")
+        public static void main(String[] args) {
+                PipelineOptions options = PipelineOptionsFactory.fromArgs(args).withValidation().create();
+                Pipeline p = Pipeline.create(options);
+                String input = "src/main/java/com/google/cloud/training/logprocessor/samplelog.json";
+                String outputPrefix = "/tmp/output";
+                final String searchTerm = "error";
+                p //
+                                .apply("GetLogs", TextIO.read().from(input)) //
+                                .apply("Extract", ParDo.of(new DoFn<String, String>() {
+                                 @ProcessElement
           public void processElement(ProcessContext c) {
           String entry = c.element();
-
           JsonParser parser = new JsonParser();
-          JsonElement element = parser.parse(entry);
+          JsonElement element = parser.parse(entry.replaceAll("\\s+",""));
             if (element.isJsonNull()) {
               return;
             }
             JsonObject root = element.getAsJsonObject();
-            JsonArray lines = root.get("protoPayload").getAsJsonObject().get("line").getAsJsonArray();
+            JsonArray lines = root.get("protoPayload").getAsJsonObject().get("authorizationInfo").getAsJsonArray();
             for (int i = 0; i < lines.size(); i++) {
               JsonObject line = lines.get(i).getAsJsonObject();
-              String logMessage = line.get("logMessage").getAsString();
-
+              String logMessage = line.get("resource").getAsString();
               // Do what you need with the logMessage here
               c.output(logMessage);
              }
           }
-				})) //
-				.apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
-
-		p.run();
-	}
+                                })) //
+                                .apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
+                p.run();
+        }
 }
