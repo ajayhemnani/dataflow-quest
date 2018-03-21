@@ -48,15 +48,23 @@ public class Messenger {
                                  @ProcessElement
           public void processElement(ProcessContext c) {
           String entry = c.element();
-          JsonParser parser = new JsonParser();
-          JsonElement element = parser.parse(entry);
-            if (element.isJsonNull()) {
-              return;
+          String logString = "";
+
+            try {
+                JsonParser parser = new JacksonFactory().createJsonParser(entry);
+                LogEntry logEntry = parser.parse(LogEntry.class);
+                logString = logEntry.getTextPayload();
+                 c.output(logString);
             }
-            JsonObject root = element.getAsJsonObject();
-            String logMessage = root.get("protoPayload").getAsJsonObject().get("receiveTimestamp").getAsString();
-              c.output(logMessage);
-          }
+            catch (IOException e) {
+                LOG.error("IOException parsing entry: " + e.getMessage());
+            }
+            catch(NullPointerException e) {
+                LOG.error("NullPointerException parsing entry: " + e.getMessage());
+            }
+                  
+                  
+                  
          })) //
                                 .apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
                 p.run();
