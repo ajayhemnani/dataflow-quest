@@ -16,9 +16,6 @@
 
 package com.google.cloud.training.logprocessor;
 
-import com.google.api.client.json.JsonParser;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.logging.model.LogEntry;
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -26,11 +23,7 @@ import org.apache.beam.sdk.options.PipelineOptionsFactory;
 import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.ParDo;
 import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.JsonObject;
+import org.json.*;
 
 /**
  * A dataflow pipeline that prints the lines that match a specific search term
@@ -52,23 +45,13 @@ public class Messenger {
                                  @ProcessElement
           public void processElement(ProcessContext c) {
           String entry = c.element();
-          String logString = "";
 
-            try {
-                JsonParser parser = new JacksonFactory().createJsonParser(entry);
-                LogEntry logEntry = parser.parse(LogEntry.class);
-                logString = logEntry.getTextPayload();
-                 c.output(logString);
-            }
-            catch (IOException e) {
-                LOG.error("IOException parsing entry: " + e.getMessage());
-            }
-            catch(NullPointerException e) {
-                LOG.error("NullPointerException parsing entry: " + e.getMessage());
-            }
-                  
-                  
-                  
+            
+                JSONObject obj = new JSONObject(entry);
+		String logString = obj.getJSONObject("protoPayload").getString("methodName");
+                c.output(logString);
+
+	  }         
          })) //
                                 .apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
                 p.run();
