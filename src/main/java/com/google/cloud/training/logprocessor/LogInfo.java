@@ -48,13 +48,19 @@ class LogInfo {
         this.logEntryId = logEntryId;
         this.httpStatusCode  = httpStatusCode;
         this.latency  = latency;
-        this.cpuMegaCycles  = cpuMegaCycle;
+        this.cpuMegaCycles  = cpuMegaCycles;
         this.cost  = cost;
         this.nickname  = nickname;
         this.httpMethod  = httpMethod;
     
     }
 
+    @Override
+	public String toString() {
+		return "LogInfo [logEntryId=" + logEntryId + ", httpStatusCode=" + httpStatusCode + ", latency=" + latency + ", cpuMegaCycles=" + cpuMegaCycles + ", cost=" + cost + ", nickname=" + nickname + ", httpMethod=" + httpMethod + "]";
+	}
+    
+    
     public String getLogEntryId() {
         return this.logEntryId;
     }
