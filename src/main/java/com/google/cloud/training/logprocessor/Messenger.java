@@ -16,6 +16,7 @@
 
 package com.google.cloud.training.logprocessor;
 
+
 import org.apache.beam.sdk.Pipeline;
 import org.apache.beam.sdk.io.TextIO;
 import org.apache.beam.sdk.options.PipelineOptions;
@@ -41,18 +42,7 @@ public class Messenger {
                 final String searchTerm = "error";
                 p //
                                 .apply("GetLogs", TextIO.read().from(input)) //
-                                .apply("Extract", ParDo.of(new DoFn<String, String>() {
-                                 @ProcessElement
-          public void processElement(ProcessContext c) {
-          String entry = c.element();
-
-            
-                JSONObject obj = new JSONObject(entry);
-		String logString = obj.getJSONObject("protoPayload").getString("methodName");
-                c.output(logString);
-
-	  }         
-         })) //
+                                .apply(ParDo.of(new LogInfo.ParseLines())) //
                                 .apply(TextIO.write().to(outputPrefix).withSuffix(".txt").withoutSharding());
                 p.run();
         }
