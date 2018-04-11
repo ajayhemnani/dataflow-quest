@@ -26,6 +26,8 @@ import org.apache.beam.sdk.transforms.DoFn;
 import org.apache.beam.sdk.transforms.Sum;
 
 import org.apache.avro.reflect.Nullable;
+import com.google.gson.Gson;
+import org.json.*;
 
 
 @DefaultCoder(AvroCoder.class)
@@ -54,10 +56,6 @@ class LogInfo {
     
     }
 
-    @Override
-	public String toString() {
-		return "LogInfo [logEntryId=" + logEntryId + ", httpStatusCode=" + httpStatusCode + ", latency=" + latency + ", cpuMegaCycles=" + cpuMegaCycles + ", cost=" + cost + ", nickname=" + nickname + ", httpMethod=" + httpMethod + "]";
-	}
     
     
     public String getLogEntryId() {
@@ -88,5 +86,57 @@ class LogInfo {
     public String getHttpMethod() {
         return this.httpMethod;
     }
+    
+    
+    public String toString() {
+		return "recid " + logEntryId + " recLatency " + latency + " " + nickname + " " + httpMethod + " " + cost + " " + cpuMegaCycles + " " + httpStatusCode;
+	}
 
+    
+    public static LogInfo Parse(String entry) {
+		try {
+			LogInfo logMessage = new LogInfo();
+			
+			JSONObject obj = new JSONObject(entry);
+			
+			logMessage.logEntryId = obj.getString("insertId");
+			logMessage.httpStatusCode = obj.getJSONObject("httpRequest").getInt("status");
+			
+			String latency = obj.getJSONObject("protoPayload").getString("latency");
+				if (latency != null && latency.length() > 0 && latency.charAt(latency.length() - 1) == 's') {
+        			latency = latency.substring(0, latency.length() - 1);
+    			}	
+    		logMessage.latency = Double.valueOf(latency);
+    		
+    		
+			logMessage.cpuMegaCycles = obj.getJSONObject("protoPayload").getDouble("megaCycles");
+			logMessage.cost = obj.getJSONObject("protoPayload").getDouble("cost");
+			logMessage.nickname = obj.getJSONObject("protoPayload").getString("nickname");
+			logMessage.httpMethod = obj.getJSONObject("protoPayload").getString("method");
+			
+
+		
+			return logMessage;
+
+		} catch (Exception e) {
+			return null; // Return null if any error parsing.
+		}
+	}
+	
+		
+		static class ParseLines extends DoFn<String, String> {
+		
+			@ProcessElement
+			public void processElement(ProcessContext c) {
+				String logLine = c.element();
+				LogInfo info = LogInfo.Parse(logLine);
+				if (info == null) {
+					//
+				} else {
+					c.output(info.toString());
+				}
+			}
+		}
+		
+    
 }
